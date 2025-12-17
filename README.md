@@ -33,6 +33,7 @@
 
 ### Backend
 ```bash
+cd backend
 pip install -r requirements.txt
 uvicorn api:app --reload
 ```
@@ -42,6 +43,14 @@ uvicorn api:app --reload
 cd frontend
 npm install
 npm run dev
+```
+
+## 🐳 Docker (Opcional para Backend)
+Si prefieres usar Docker para el backend:
+```bash
+cd backend
+docker build -t finance-backend .
+docker run -p 8000:8000 finance-backend
 ```
 
 ---
