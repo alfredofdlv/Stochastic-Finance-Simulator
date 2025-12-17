@@ -38,6 +38,8 @@ class SimulationRequest(BaseModel):
     tax_rate: float
     financial_goal: float
     black_swan_enabled: bool = True
+    custom_return: Optional[float] = None
+    custom_volatility: Optional[float] = None
 
 class BacktestRequest(BaseModel):
     initial_capital: float
@@ -76,12 +78,16 @@ def search_tickers(query: str):
 @app.post("/simulate")
 def simulate(request: SimulationRequest):
     # 1. Get Stats for Ticker
-    stats = get_historical_stats(request.ticker)
-    if not stats:
-        raise HTTPException(status_code=404, detail=f"Ticker {request.ticker} not found or no data available.")
-    
-    mean_return = stats["mean_return"]
-    volatility = stats["volatility"]
+    if request.ticker == 'CUSTOM' and request.custom_return is not None and request.custom_volatility is not None:
+        mean_return = request.custom_return / 100.0
+        volatility = request.custom_volatility / 100.0
+    else:
+        stats = get_historical_stats(request.ticker)
+        if not stats:
+            raise HTTPException(status_code=404, detail=f"Ticker {request.ticker} not found or no data available.")
+        
+        mean_return = stats["mean_return"]
+        volatility = stats["volatility"]
     
     # 2. Prepare Schedule
     schedule = [(t.years, t.monthly_amount) for t in request.contribution_schedule]

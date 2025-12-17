@@ -10,6 +10,9 @@ export interface SimulationRequest {
   inflation_rate: number;
   tax_rate: number;
   financial_goal: number;
+  black_swan_enabled?: boolean;
+  custom_return?: number;
+  custom_volatility?: number;
 }
 
 export interface BacktestRequest {

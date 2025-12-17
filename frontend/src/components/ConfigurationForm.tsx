@@ -13,6 +13,8 @@ export interface SimulationConfig {
   financialGoal: number;
   startYear?: number;
   blackSwanEnabled: boolean;
+  customReturn?: number;
+  customVolatility?: number;
 }
 
 interface ConfigurationFormProps {
@@ -27,6 +29,7 @@ const QUICK_ASSETS = [
   { label: 'MSCI World', ticker: 'URTH' },
   { label: 'Nasdaq 100', ticker: 'QQQ' },
   { label: 'Vanguard Global', ticker: 'VWRL.AS' },
+  { label: 'Personalizado', ticker: 'CUSTOM' },
 ];
 
 const Section = ({ title, icon: Icon, children, defaultOpen = false }: any) => (
@@ -59,7 +62,9 @@ export default function ConfigurationForm({
     contributions: [{ years: 20, monthly_amount: 500 }],
     financialGoal: 500000,
     startYear: undefined,
-    blackSwanEnabled: true
+    blackSwanEnabled: true,
+    customReturn: 8.0,
+    customVolatility: 15.0
   });
 
   const updateContribution = (index: number, field: keyof ContributionTranche, value: number) => {
@@ -127,6 +132,31 @@ export default function ConfigurationForm({
             <span>Seleccionado:</span>
             <span className="font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{config.ticker}</span>
           </div>
+
+          {config.ticker === 'CUSTOM' && (
+            <div className="grid grid-cols-2 gap-4 mt-4 p-3 bg-accent/30 rounded-lg border border-border animate-in slide-in-from-top-2">
+              <div>
+                <label className={labelClass}>Retorno Anual (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={config.customReturn}
+                  onChange={(e) => setConfig({ ...config, customReturn: Number(e.target.value) })}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Volatilidad (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={config.customVolatility}
+                  onChange={(e) => setConfig({ ...config, customVolatility: Number(e.target.value) })}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">

@@ -23,7 +23,7 @@
   --ring: #18181b;
 }
 
-[data-theme="dark"] {
+[data-theme="dark"], .dark {
   /* True Dark Mode */
   --background: #09090b;
   --foreground: #fafafa;

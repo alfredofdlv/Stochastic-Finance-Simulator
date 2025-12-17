@@ -73,6 +73,7 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
       fill: 'tonexty',
       fillcolor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(0, 104, 201, 0.2)',
       name: 'Rango Probable (P10-P90)',
+      hovertemplate: 'Rango Probable (P10-P90): %{y:,.0f}€<extra></extra>'
     },
     // Median
     {
@@ -82,6 +83,7 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
       mode: 'lines',
       line: { color: isDark ? '#60a5fa' : '#0068C9', width: 3 },
       name: `Mediana (${isReal ? 'Real' : 'Nominal'})`,
+      hovertemplate: 'Mediana: %{y:,.0f}€<extra></extra>'
     }
   ];
 
@@ -211,7 +213,22 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
         {activeTab === 'future' && (
           <PlotlyChart
             data={fanChartTraces}
-            layout={{ ...commonLayout, title: { text: `Proyección de Patrimonio (${isReal ? 'Real' : 'Nominal'})` } }}
+            layout={{ 
+              ...commonLayout, 
+              title: { text: `Proyección de Patrimonio (${isReal ? 'Real' : 'Nominal'})` },
+              annotations: [
+                {
+                  x: 0.05,
+                  y: 0.95,
+                  xref: 'paper',
+                  yref: 'paper',
+                  text: 'El área sombreada representa el 80% de los escenarios probables (P10 a P90)',
+                  showarrow: false,
+                  font: { size: 10, color: isDark ? '#94a3b8' : '#64748b' },
+                  align: 'left'
+                }
+              ]
+            }}
             useResizeHandler
             style={{ width: '100%', height: '100%' }}
           />

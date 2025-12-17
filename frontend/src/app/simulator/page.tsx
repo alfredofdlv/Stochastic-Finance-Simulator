@@ -50,7 +50,10 @@ export default function SimulatorPage() {
         ticker: config.ticker,
         inflation_rate: config.inflation / 100,
         tax_rate: 0.19,
-        financial_goal: config.financialGoal
+        financial_goal: config.financialGoal,
+        black_swan_enabled: config.blackSwanEnabled,
+        custom_return: config.customReturn,
+        custom_volatility: config.customVolatility
       });
       setSimulationData(simResponse);
       setHasRun(true);
