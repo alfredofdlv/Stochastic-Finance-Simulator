@@ -163,12 +163,12 @@ export default function RiskAnalysisPage() {
                 paper_bgcolor: "transparent",
                 plot_bgcolor: "transparent",
                 xaxis: { 
-                    title: 'Año', 
+                    title: { text: 'Año' }, 
                     gridcolor: isDark ? '#262626' : '#e5e5e5',
                     color: isDark ? '#a3a3a3' : '#525252'
                 },
                 yaxis: { 
-                    title: 'Caída desde Máximo (%)', 
+                    title: { text: 'Caída desde Máximo (%)' }, 
                     gridcolor: isDark ? '#262626' : '#e5e5e5',
                     color: isDark ? '#a3a3a3' : '#525252',
                     zerolinecolor: isDark ? '#404040' : '#d4d4d4'
@@ -211,12 +211,12 @@ export default function RiskAnalysisPage() {
                 paper_bgcolor: "transparent",
                 plot_bgcolor: "transparent",
                 xaxis: { 
-                    title: 'Año', 
+                    title: { text: 'Año' }, 
                     gridcolor: isDark ? '#262626' : '#e5e5e5',
                     color: isDark ? '#a3a3a3' : '#525252'
                 },
                 yaxis: { 
-                    title: 'Retorno (%)', 
+                    title: { text: 'Retorno (%)' }, 
                     gridcolor: isDark ? '#262626' : '#e5e5e5',
                     color: isDark ? '#a3a3a3' : '#525252',
                     zerolinecolor: isDark ? '#404040' : '#d4d4d4'
