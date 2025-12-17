@@ -56,6 +56,7 @@ def run_monte_carlo_simulation(
     volatility=0.15,
     black_swan_enabled=True,
     black_swan_prob=0.02,
+    inflation_rate=0.02,
     num_simulations=1000
 ):
     """
@@ -66,11 +67,14 @@ def run_monte_carlo_simulation(
         mean_return: Retorno medio anual (decimal).
         volatility: Volatilidad anual (decimal).
         black_swan_enabled: Si se activan los eventos extremos.
+        inflation_rate: Tasa de inflación anual (decimal).
         
     Retorna:
-        - summary_df: DataFrame con percentiles.
+        - summary_df: DataFrame con percentiles (Nominal y Real).
         - median_details: Detalle año a año del escenario mediano.
-        - breakdown_df: DataFrame para el gráfico de barras apiladas (Capital, Aportado, Interés).
+        - breakdown_df: DataFrame para el gráfico de barras apiladas.
+        - simulation_stats: Diccionario con estadísticas extra (Max Drawdown, etc).
+        - final_balances_real: Array con todos los saldos finales reales (para probabilidad de éxito).
     """
     
     # 1. Expandir el calendario de aportaciones a una lista año a año
@@ -83,15 +87,18 @@ def run_monte_carlo_simulation(
         
     total_years = len(annual_contributions_list)
     
-    # Matriz de resultados (Simulaciones x Años+1)
-    results = np.zeros((num_simulations, total_years + 1))
-    results[:, 0] = initial_capital
+    # Matriz de resultados NOMINALES (Simulaciones x Años+1)
+    results_nominal = np.zeros((num_simulations, total_years + 1))
+    results_nominal[:, 0] = initial_capital
+    
+    # Matriz de resultados REALES (Ajustados por inflación)
+    results_real = np.zeros((num_simulations, total_years + 1))
+    results_real[:, 0] = initial_capital
     
     # Matriz de retornos para análisis
     returns_matrix = np.zeros((num_simulations, total_years + 1))
     
     # Factor de normalización para t-student (df=3, var=3, std=sqrt(3))
-    # Queremos que la volatilidad de entrada sea la std dev final.
     t_std_dev = np.sqrt(3)
     
     for sim in range(num_simulations):
@@ -105,32 +112,35 @@ def run_monte_carlo_simulation(
             is_black_swan = False
             if black_swan_enabled and np.random.random() < black_swan_prob:
                 is_black_swan = True
-                # Caída entre 20% y 50%
                 r_t = np.random.uniform(-0.50, -0.20)
             else:
-                # Distribución T de Student con colas pesadas (df=3)
-                # Normalizamos dividiendo por sqrt(3) para que la 'volatility' sea la std real
                 t_random = np.random.standard_t(3) / t_std_dev
                 r_t = mean_return + volatility * t_random
             
             returns_matrix[sim, year_num] = r_t
             
-            # Cálculo del saldo
-            # Asumimos aportación al final o promediada, simplificamos:
-            # Saldo crece, luego se añade aportación.
+            # Cálculo del saldo NOMINAL
             balance = balance * (1 + r_t) + contribution
-            results[sim, year_num] = balance
+            results_nominal[sim, year_num] = balance
+            
+            # Cálculo del saldo REAL (Deflactado)
+            # Factor de descuento de inflación: (1 + inflation)^year_num
+            deflator = (1 + inflation_rate) ** year_num
+            results_real[sim, year_num] = balance / deflator
 
-    # --- Procesar Resultados ---
+    # --- Procesar Resultados (Usamos Nominal por defecto para gráficos estándar, pero guardamos Real) ---
     
-    # Percentiles
-    p10 = np.percentile(results, 10, axis=0)
-    p50 = np.percentile(results, 50, axis=0)
-    p90 = np.percentile(results, 90, axis=0)
+    # Percentiles NOMINALES
+    p10_nom = np.percentile(results_nominal, 10, axis=0)
+    p50_nom = np.percentile(results_nominal, 50, axis=0)
+    p90_nom = np.percentile(results_nominal, 90, axis=0)
     
-    # Calcular acumulados "deterministas" (sin mercado) para gráficos
-    # Capital Inicial es constante
-    # Aportaciones Acumuladas
+    # Percentiles REALES
+    p10_real = np.percentile(results_real, 10, axis=0)
+    p50_real = np.percentile(results_real, 50, axis=0)
+    p90_real = np.percentile(results_real, 90, axis=0)
+    
+    # Calcular acumulados "deterministas"
     cumulative_contributions = [0] * (total_years + 1)
     current_contrib_sum = 0
     for i in range(total_years):
@@ -139,28 +149,38 @@ def run_monte_carlo_simulation(
         
     invested_capital_total = [initial_capital + c for c in cumulative_contributions]
     
+    # DataFrame Resumen (Contiene datos Nominales y Reales)
     summary_df = pd.DataFrame({
         "Year": range(total_years + 1),
         "Invested": invested_capital_total,
-        "P10": p10,
-        "Median": p50,
-        "P90": p90
+        "P10_Nominal": p10_nom, "Median_Nominal": p50_nom, "P90_Nominal": p90_nom,
+        "P10_Real": p10_real, "Median_Real": p50_real, "P90_Real": p90_real
     })
     
-    # --- Detalle Escenario Mediano ---
-    final_balances = results[:, -1]
-    median_val = np.median(final_balances)
-    median_sim_idx = (np.abs(final_balances - median_val)).argmin()
+    # --- Detalle Escenario Mediano (Nominal) ---
+    final_balances_nom = results_nominal[:, -1]
+    median_val_nom = np.median(final_balances_nom)
+    median_sim_idx = (np.abs(final_balances_nom - median_val_nom)).argmin()
     
+    # Calcular Max Drawdown para el escenario mediano
+    # Drawdown = (Peak - Current) / Peak
+    median_curve = results_nominal[median_sim_idx, :]
+    peak = median_curve[0]
+    max_drawdown = 0.0
+    
+    for val in median_curve:
+        if val > peak:
+            peak = val
+        dd = (peak - val) / peak
+        if dd > max_drawdown:
+            max_drawdown = dd
+            
     median_details = []
-    
-    # Para el gráfico de barras apiladas (basado en la mediana)
     stacked_initial = []
     stacked_contributed = []
     stacked_interest = []
     
     for i in range(total_years + 1):
-        # Año 0
         if i == 0:
             stacked_initial.append(initial_capital)
             stacked_contributed.append(0)
@@ -168,8 +188,8 @@ def run_monte_carlo_simulation(
             continue
             
         year_num = i
-        prev_balance = results[median_sim_idx, i-1]
-        curr_balance = results[median_sim_idx, i]
+        prev_balance = results_nominal[median_sim_idx, i-1]
+        curr_balance = results_nominal[median_sim_idx, i]
         r_t = returns_matrix[median_sim_idx, i]
         contrib = annual_contributions_list[i-1]
         
@@ -184,10 +204,8 @@ def run_monte_carlo_simulation(
             "Saldo Final": curr_balance
         })
         
-        # Datos para Stacked Bar
         stacked_initial.append(initial_capital)
         stacked_contributed.append(cumulative_contributions[i])
-        # El resto es interés
         total_interest = curr_balance - initial_capital - cumulative_contributions[i]
         stacked_interest.append(total_interest)
 
@@ -197,8 +215,15 @@ def run_monte_carlo_simulation(
         "Aportaciones": stacked_contributed,
         "Interés Compuesto": stacked_interest
     })
+    
+    simulation_stats = {
+        "max_drawdown": max_drawdown
+    }
+    
+    # Retornamos todos los saldos finales REALES para calcular probabilidad de éxito
+    final_balances_real = results_real[:, -1]
 
-    return summary_df, median_details, breakdown_df
+    return summary_df, median_details, breakdown_df, simulation_stats, final_balances_real
 
 def calculate_kpis(initial_capital, total_contributed, final_balance, tax_rate):
     total_invested = initial_capital + total_contributed

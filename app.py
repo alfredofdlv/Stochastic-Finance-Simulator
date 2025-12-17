@@ -102,6 +102,7 @@ st.sidebar.markdown("""
 MEAN_RETURN = mean_return_input / 100.0
 VOLATILITY = volatility_input / 100.0
 BLACK_SWAN_PROB = 0.02
+INFLATION_RATE = inflation_rate_input / 100.0
 
 if st.sidebar.button("🚀 Ejecutar Simulación", type="primary"):
     
@@ -117,18 +118,29 @@ if st.sidebar.button("🚀 Ejecutar Simulación", type="primary"):
 
     # --- Ejecutar Lógica ---
     with st.spinner('Simulando 1,000 escenarios de mercado...'):
-        summary_df, median_details, breakdown_df = run_monte_carlo_simulation(
+        summary_df, median_details, breakdown_df, sim_stats, final_balances_real = run_monte_carlo_simulation(
             initial_capital=initial_capital,
             contribution_schedule=contribution_schedule,
             mean_return=MEAN_RETURN,
             volatility=VOLATILITY,
             black_swan_enabled=black_swan_enabled,
             black_swan_prob=BLACK_SWAN_PROB,
+            inflation_rate=INFLATION_RATE,
             num_simulations=1000
         )
     
-    # Calcular KPIs basados en el escenario MEDIANO
-    median_final_balance = summary_df["Median"].iloc[-1]
+    # Toggle Vista Real vs Nominal
+    view_mode = st.radio("Modo de Visualización:", ["Nominal (Sin ajustar)", "Real (Poder Adquisitivo)"], horizontal=True)
+    is_real = view_mode == "Real (Poder Adquisitivo)"
+    
+    # Seleccionar datos según modo
+    if is_real:
+        median_final_balance = summary_df["Median_Real"].iloc[-1]
+        p10_col, p50_col, p90_col = "P10_Real", "Median_Real", "P90_Real"
+    else:
+        median_final_balance = summary_df["Median_Nominal"].iloc[-1]
+        p10_col, p50_col, p90_col = "P10_Nominal", "Median_Nominal", "P90_Nominal"
+
     total_contributed = breakdown_df["Aportaciones"].iloc[-1]
     
     kpis = calculate_kpis(
@@ -138,8 +150,23 @@ if st.sidebar.button("🚀 Ejecutar Simulación", type="primary"):
         tax_rate_input / 100.0
     )
     
+    # Probabilidad de Éxito (Meta) - Siempre calculada sobre valor REAL para ser honestos
+    success_prob = (final_balances_real >= financial_goal).mean() * 100
+    
     # --- Visualización de KPIs ---
     st.markdown("### 🎯 Resultados Clave (Escenario Mediano)")
+    
+    # Estilo CSS para KPIs
+    st.markdown("""
+    <style>
+    div[data-testid="stMetric"] {
+        background-color: #f0f2f6;
+        border: 1px solid #e0e0e0;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
     
@@ -150,24 +177,23 @@ if st.sidebar.button("🚀 Ejecutar Simulación", type="primary"):
     )
     
     kpi2.metric(
-        label="Saldo Final Neto", 
+        label=f"Saldo Final ({'Real' if is_real else 'Nominal'})", 
         value=f"€{kpis['Saldo Final Neto']:,.0f}",
         delta=f"Impuestos: -€{kpis['Impuestos Estimados']:,.0f}",
-        help="Dinero disponible en tu bolsillo después de pagar impuestos sobre beneficios."
+        help="Dinero disponible después de impuestos."
     )
     
-    profit_color = "normal" if kpis['Beneficio Neto'] >= 0 else "inverse"
     kpi3.metric(
-        label="Beneficio Neto", 
-        value=f"€{kpis['Beneficio Neto']:,.0f}",
-        delta_color=profit_color,
-        help="Ganancia pura después de impuestos."
+        label="Max Drawdown (Caída Máx)", 
+        value=f"{sim_stats['max_drawdown']*100:.1f}%",
+        delta_color="inverse",
+        help="La mayor caída desde un máximo histórico en el escenario mediano."
     )
     
     kpi4.metric(
-        label="Rentabilidad Total", 
-        value=f"{kpis['Rentabilidad (%)']:.1f}%",
-        help="Porcentaje de ganancia sobre el capital invertido."
+        label=f"Prob. Meta (>€{financial_goal/1000:.0f}k Real)", 
+        value=f"{success_prob:.1f}%",
+        help="Probabilidad de superar tu meta financiera en términos de poder adquisitivo real."
     )
     
     st.markdown("---")
@@ -179,35 +205,58 @@ if st.sidebar.button("🚀 Ejecutar Simulación", type="primary"):
     
     # Área de incertidumbre (P10 a P90)
     fig_fan.add_trace(go.Scatter(
-        x=summary_df["Year"], y=summary_df["P10"],
+        x=summary_df["Year"], y=summary_df[p10_col],
         mode='lines', line=dict(width=0), showlegend=False, name='Pesimista (P10)'
     ))
     
     fig_fan.add_trace(go.Scatter(
-        x=summary_df["Year"], y=summary_df["P90"],
+        x=summary_df["Year"], y=summary_df[p90_col],
         mode='lines', line=dict(width=0), fill='tonexty',
         fillcolor='rgba(0, 100, 255, 0.15)', name='Rango Probable (10%-90%)'
     ))
     
     # Línea Mediana
     fig_fan.add_trace(go.Scatter(
-        x=summary_df["Year"], y=summary_df["Median"],
+        x=summary_df["Year"], y=summary_df[p50_col],
         mode='lines', line=dict(color='#0068C9', width=3), name='Escenario Mediano'
     ))
     
-    # Capital Invertido
-    fig_fan.add_trace(go.Scatter(
-        x=summary_df["Year"], y=summary_df["Invested"],
-        mode='lines', line=dict(color='gray', dash='dash', width=2), name='Capital Invertido (Sin Rentabilidad)'
-    ))
+    # Capital Invertido (Solo tiene sentido compararlo en nominal, o deflactarlo también. 
+    # Para simplificar, mostramos nominal si estamos en nominal, o lo ocultamos en real para no confundir)
+    if not is_real:
+        fig_fan.add_trace(go.Scatter(
+            x=summary_df["Year"], y=summary_df["Invested"],
+            mode='lines', line=dict(color='gray', dash='dash', width=2), name='Capital Invertido'
+        ))
     
     fig_fan.update_layout(
-        xaxis_title="Año", yaxis_title="Saldo (€)",
+        xaxis_title="Año", yaxis_title=f"Saldo (€ {'Real' if is_real else 'Nominal'})",
         hovermode="x unified", template="plotly_white",
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(l=20, r=20, t=50, b=20)
     )
     st.plotly_chart(fig_fan, use_container_width=True)
+    
+    # --- Gráfico de Probabilidad de Meta (Gauge) ---
+    st.subheader("🎯 Probabilidad de Alcanzar tu Meta")
+    
+    fig_gauge = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = success_prob,
+        title = {'text': f"Probabilidad de superar €{financial_goal:,.0f} (Real)"},
+        gauge = {
+            'axis': {'range': [0, 100]},
+            'bar': {'color': "#0068C9"},
+            'steps': [
+                {'range': [0, 50], 'color': "#ffcccb"},
+                {'range': [50, 80], 'color': "#fff4cc"},
+                {'range': [80, 100], 'color': "#ccffcc"}],
+            'threshold': {
+                'line': {'color': "red", 'width': 4},
+                'thickness': 0.75,
+                'value': 90}}
+    ))
+    st.plotly_chart(fig_gauge, use_container_width=True)
     
     # --- Gráfico de Barras Apiladas ---
     st.subheader("💰 Composición del Patrimonio")
