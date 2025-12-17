@@ -53,7 +53,8 @@ export default function SimulatorPage() {
         financial_goal: config.financialGoal,
         black_swan_enabled: config.blackSwanEnabled,
         custom_return: config.customReturn,
-        custom_volatility: config.customVolatility
+        custom_volatility: config.customVolatility,
+        t_df: config.t_df
       });
       setSimulationData(simResponse);
       setHasRun(true);

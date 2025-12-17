@@ -13,6 +13,7 @@ export interface SimulationRequest {
   black_swan_enabled?: boolean;
   custom_return?: number;
   custom_volatility?: number;
+  t_df?: number;
 }
 
 export interface BacktestRequest {

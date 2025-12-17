@@ -12,7 +12,7 @@ export type { SimulationConfig };
 
 export default function Sidebar({ onRunSimulation, isLoading, currentConfig }: SidebarProps) {
   return (
-    <aside className="w-full md:w-80 bg-white border-r border-slate-200 h-full overflow-y-auto p-6 flex flex-col gap-6 shadow-sm z-10">
+    <aside className="w-full md:w-80 bg-card border-r border-border h-full overflow-y-auto p-6 flex flex-col gap-6 shadow-sm z-10 transition-colors">
       <ConfigurationForm 
         onRunSimulation={onRunSimulation} 
         isLoading={isLoading} 

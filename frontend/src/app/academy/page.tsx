@@ -28,7 +28,7 @@ export default function AcademyPage() {
             <div className="bg-accent/30 p-6 rounded-xl border border-border/50 my-4">
               <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">Modelo Matemático (Movimiento Browniano Geométrico)</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                La evolución del precio del activo $S_t$ se modela mediante la siguiente ecuación diferencial estocástica:
+                La evolución del precio del activo <InlineMath math="S_t" /> se modela mediante la siguiente ecuación diferencial estocástica:
               </p>
               <div className="overflow-x-auto py-2">
                 <BlockMath math="dS_t = \mu S_t dt + \sigma S_t dW_t" />

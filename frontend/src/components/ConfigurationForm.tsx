@@ -15,6 +15,7 @@ export interface SimulationConfig {
   blackSwanEnabled: boolean;
   customReturn?: number;
   customVolatility?: number;
+  t_df?: number;
 }
 
 interface ConfigurationFormProps {
@@ -64,7 +65,8 @@ export default function ConfigurationForm({
     startYear: undefined,
     blackSwanEnabled: true,
     customReturn: 8.0,
-    customVolatility: 15.0
+    customVolatility: 15.0,
+    t_df: 3
   });
 
   const updateContribution = (index: number, field: keyof ContributionTranche, value: number) => {
@@ -264,10 +266,29 @@ export default function ConfigurationForm({
             Opcional. Si se deja vacío, no se ejecuta backtest.
           </p>
         </div>
+
+        <div className="mt-4">
+          <label className={labelClass}>Grados de Libertad (T-Student)</label>
+          <div className="flex items-center gap-4">
+            <input
+              type="range"
+              min="1"
+              max="30"
+              step="1"
+              value={config.t_df || 3}
+              onChange={(e) => setConfig({ ...config, t_df: Number(e.target.value) })}
+              className="w-full h-2 bg-accent rounded-lg appearance-none cursor-pointer"
+            />
+            <span className="font-mono text-sm font-bold w-8 text-center">{config.t_df || 3}</span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Menor valor = Colas más gordas (Eventos más extremos).
+          </p>
+        </div>
         
         <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
           <p className="text-xs text-yellow-600 dark:text-yellow-400">
-            <strong>Nota Técnica:</strong> La simulación utiliza una distribución T-Student con 3 grados de libertad para modelar colas pesadas (fat tails).
+            <strong>Nota Técnica:</strong> La simulación utiliza una distribución T-Student con {config.t_df || 3} grados de libertad para modelar colas pesadas (fat tails).
           </p>
         </div>
       </Section>

@@ -40,6 +40,7 @@ class SimulationRequest(BaseModel):
     black_swan_enabled: bool = True
     custom_return: Optional[float] = None
     custom_volatility: Optional[float] = None
+    t_df: int = 3
 
 class BacktestRequest(BaseModel):
     initial_capital: float
@@ -99,7 +100,8 @@ def simulate(request: SimulationRequest):
         mean_return=mean_return,
         volatility=volatility,
         inflation_rate=request.inflation_rate,
-        black_swan_enabled=request.black_swan_enabled
+        black_swan_enabled=request.black_swan_enabled,
+        t_df=request.t_df
     )
     
     # 4. Process Results
