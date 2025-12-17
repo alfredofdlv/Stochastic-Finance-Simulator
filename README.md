@@ -8,6 +8,8 @@
 
 **WealthStress-Test** es una plataforma profesional de simulación financiera diseñada para inversores que buscan entender el riesgo real de sus carteras. A diferencia de las calculadoras lineales tradicionales, este sistema modela la incertidumbre del mercado utilizando matemáticas avanzadas.
 
+🚀 **Demo en vivo:** [https://stochastic-finance-simulator-q1gio59x3-alfredofdlvs-projects.vercel.app](https://stochastic-finance-simulator-q1gio59x3-alfredofdlvs-projects.vercel.app)
+
 ## ✨ Características Principales
 
 *   **Simulación de Monte Carlo Avanzada:** Genera miles de trayectorias posibles basadas en estadísticas históricas reales de cualquier ticker de Yahoo Finance.

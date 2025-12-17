@@ -2,6 +2,8 @@
 
 Este es el cliente web de **WealthStress-Test**, construido con las tecnologías más modernas de React y Next.js para ofrecer una herramienta financiera de grado profesional.
 
+🚀 **Demo en vivo:** [https://stochastic-finance-simulator-q1gio59x3-alfredofdlvs-projects.vercel.app](https://stochastic-finance-simulator-q1gio59x3-alfredofdlvs-projects.vercel.app)
+
 ## 🚀 Tecnologías Utilizadas
 
 *   **Framework:** [Next.js 15](https://nextjs.org/) (App Router)
