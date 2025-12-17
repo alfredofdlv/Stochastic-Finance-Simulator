@@ -6,7 +6,7 @@ import PlotlyChart from '@/components/PlotlyChart';
 import { useTheme } from 'next-themes';
 
 export default function RiskAnalysisPage() {
-  const { simulationData } = useSimulation();
+  const { simulationData, backtestData } = useSimulation();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -24,6 +24,12 @@ export default function RiskAnalysisPage() {
     );
   }
 
+  const backtestStartYear = backtestData?.history?.[0]?.Date 
+    ? new Date(backtestData.history[0].Date).getFullYear() 
+    : new Date().getFullYear();
+  
+  const startYear = backtestData ? backtestStartYear : new Date().getFullYear();
+
   // Calculate Drawdown Series for Median Scenario
   let peak = 0;
   const drawdownSeries = simulationData.median_scenario.map((point) => {
@@ -34,12 +40,12 @@ export default function RiskAnalysisPage() {
         peak = Math.max(peak, balance);
     }
     const drawdown = (balance - peak) / peak;
-    return { year: point.Año, drawdown: drawdown * 100 }; // in %
+    return { year: point.Año + startYear, drawdown: drawdown * 100 }; // in %
   });
 
   // Prepare Data for Annual Returns Chart
   const annualReturns = simulationData.median_scenario.map(p => p["Retorno (%)"]);
-  const years = simulationData.median_scenario.map(p => p.Año);
+  const years = simulationData.median_scenario.map(p => p.Año + startYear);
   const returnColors = annualReturns.map(r => r >= 0 ? '#22c55e' : '#ef4444');
 
   return (
@@ -66,7 +72,7 @@ export default function RiskAnalysisPage() {
                 {
                   type: "indicator",
                   mode: "gauge+number",
-                  value: simulationData.risk_metrics.success_probability * 100,
+                  value: simulationData.risk_metrics.success_probability,
                   title: { text: "Probabilidad de alcanzar la meta", font: { size: 14, color: isDark ? '#e5e7eb' : '#374151' } },
                   number: { suffix: "%", font: { color: isDark ? '#e5e7eb' : '#374151' } },
                   gauge: {

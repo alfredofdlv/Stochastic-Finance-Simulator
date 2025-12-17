@@ -1,71 +1,48 @@
-# 📈 Finance Simulator Professional
+# 📈 WealthStress-Test: Simulador Financiero Estocástico
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)
-![Next.js](https://img.shields.io/badge/Next.js-14+-black.svg)
+![Next.js](https://img.shields.io/badge/Next.js-15+-black.svg)
+![Tailwind](https://img.shields.io/badge/Tailwind-v4-38bdf8.svg)
 
-Una plataforma de simulación financiera de alto rendimiento diseñada para proyectar el patrimonio bajo condiciones de estrés de mercado. A diferencia de las calculadoras de interés compuesto tradicionales, este sistema utiliza **Simulaciones de Monte Carlo** con distribuciones **T-Student** para modelar "colas gordas" (eventos extremos) y Cisnes Negros.
+**WealthStress-Test** es una plataforma profesional de simulación financiera diseñada para inversores que buscan entender el riesgo real de sus carteras. A diferencia de las calculadoras lineales tradicionales, este sistema modela la incertidumbre del mercado utilizando matemáticas avanzadas.
 
-## 🏗️ Arquitectura
+## ✨ Características Principales
 
-El proyecto sigue una arquitectura moderna de microservicios desacoplados:
-
-*   **Backend (API REST):** Construido con **FastAPI**. Se encarga de la lógica matemática pesada, generación de números aleatorios (NumPy) y procesamiento de datos financieros (Pandas/YFinance).
-*   **Frontend (SPA):** Desarrollado con **Next.js (App Router)** y **Tailwind CSS**. Ofrece una experiencia de usuario fluida, visualización de datos interactiva con **Plotly.js** y diseño responsivo.
+*   **Simulación de Monte Carlo Avanzada:** Genera miles de trayectorias posibles basadas en estadísticas históricas reales de cualquier ticker de Yahoo Finance.
+*   **Modelado de "Fat Tails" (Colas Pesadas):** Utiliza la distribución **T-Student** (en lugar de la Normal) para capturar la probabilidad real de eventos extremos.
+*   **Análisis de Cisnes Negros:** Inyecta eventos de estrés de mercado configurables para evaluar la resiliencia del patrimonio.
+*   **Backtesting Histórico:** Compara proyecciones con datos reales del pasado para validar estrategias.
+*   **Análisis de Riesgo Profundo:** Página dedicada con métricas de Max Drawdown, Probabilidad de Éxito y visualizaciones de "Montaña Rusa Emocional".
+*   **Modo Experto:** Control total sobre los grados de libertad de la distribución y parámetros de volatilidad.
 
 ## 🧮 Fundamentos Matemáticos
 
-1.  **Monte Carlo:** Ejecutamos miles de iteraciones para obtener un cono de probabilidad (Fan Chart) en lugar de una línea determinista.
-2.  **Distribución T-Student:** En lugar de la distribución Normal (Gaussiana), usamos T-Student con bajos grados de libertad para capturar la realidad de los mercados financieros: los eventos extremos ocurren con más frecuencia de lo que predice la curva de campana.
-3.  **Cisnes Negros:** Un módulo estocástico inyecta caídas de mercado severas (-20% a -50%) con una probabilidad configurable, permitiendo "estresar" la cartera.
+1.  **Movimiento Browniano Geométrico (Modificado):** La evolución del precio se modela como una Ecuación Diferencial Estocástica (SDE).
+2.  **Distribución T-Student:** Permite ajustar la "gordura" de las colas. Un valor de `df=3` modela mercados con alta frecuencia de crisis.
+3.  **Ajuste por Inflación:** Todos los cálculos pueden visualizarse en términos de **Poder Adquisitivo Real**, descontando la inflación proyectada.
 
-## 🚀 Instalación y Despliegue
+## 🏗️ Arquitectura
 
-### Prerrequisitos
-*   Python 3.10+
-*   Node.js 18+
+*   **Backend:** FastAPI (Python) + NumPy + Pandas + YFinance.
+*   **Frontend:** Next.js 15 + Tailwind CSS v4 + Lucide Icons + Plotly.js.
+*   **Estado:** React Context API para gestión de datos de simulación.
 
-### 1. Backend (FastAPI)
+## 🚀 Instalación Rápida
 
+### Backend
 ```bash
-# Clonar repositorio
-git clone https://github.com/tu-usuario/finance-simulator.git
-cd finance-simulator
-
-# Crear entorno virtual
-python -m venv .venv
-source .venv/bin/activate  # Windows: .\.venv\Scripts\Activate
-
-# Instalar dependencias
 pip install -r requirements.txt
-
-# Ejecutar servidor
 uvicorn api:app --reload
 ```
-El backend estará disponible en `http://127.0.0.1:8000`.
 
-### 2. Frontend (Next.js)
-
+### Frontend
 ```bash
 cd frontend
-
-# Instalar dependencias
 npm install
-
-# Ejecutar servidor de desarrollo
 npm run dev
 ```
-La aplicación estará disponible en `http://localhost:3000`.
-
-## 🤝 Open Source vs Privado
-
-**Ventajas de hacerlo Open Source:**
-*   **Portfolio de Alto Impacto:** Demuestra capacidad para construir sistemas complejos "Full Stack" con lógica financiera real.
-*   **Feedback Comunitario:** Otros desarrolladores pueden auditar el código matemático, encontrando errores sutiles en la simulación.
-
-**Desventajas:**
-*   **Propiedad Intelectual:** Si planeas monetizar la lógica específica de "Cisne Negro" o los algoritmos de optimización, liberarlos permite que cualquiera los clone.
 
 ---
-*Desarrollado con ❤️ para inversores que no creen en las líneas rectas.*
+*Desarrollado por [Alfredo Florez](https://github.com/alfredofdlv) para inversores que no creen en las líneas rectas.*

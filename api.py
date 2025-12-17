@@ -107,7 +107,7 @@ def simulate(request: SimulationRequest):
     # 4. Process Results
     
     # Fan Chart Data
-    fan_chart = summary_df[["Year", "P10_Nominal", "Median_Nominal", "P90_Nominal", "P10_Real", "Median_Real", "P90_Real"]].to_dict(orient="records")
+    fan_chart = summary_df[["Year", "Invested", "Invested_Real", "P10_Nominal", "Median_Nominal", "P90_Nominal", "P10_Real", "Median_Real", "P90_Real"]].to_dict(orient="records")
     
     # Portfolio Composition Data (Stacked Bar)
     portfolio_composition = breakdown_df.to_dict(orient="records")

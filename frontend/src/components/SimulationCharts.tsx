@@ -26,6 +26,12 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
   }
 
   // --- Chart Configurations ---
+  const backtestStartYear = backtestData?.history?.[0]?.Date 
+    ? new Date(backtestData.history[0].Date).getFullYear() 
+    : new Date().getFullYear();
+  
+  const startYear = backtestData ? backtestStartYear : new Date().getFullYear();
+  const formatCurrency = (val: number) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(val);
 
   const commonLayout: Partial<Layout> = {
     autosize: true,
@@ -45,11 +51,12 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
       gridcolor: isDark ? '#334155' : '#f1f5f9',
       tickfont: { color: isDark ? '#94a3b8' : '#64748b' }
     },
+    hovermode: 'x unified',
   };
 
   // 1. Fan Chart (Future)
   const fanChartData = simulationData.fan_chart;
-  const years = fanChartData.map(d => d.Year);
+  const years = fanChartData.map(d => d.Year + startYear);
   const suffix = isReal ? '_Real' : '_Nominal';
   
   const fanChartTraces: any[] = [
@@ -73,7 +80,7 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
       fill: 'tonexty',
       fillcolor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(0, 104, 201, 0.2)',
       name: 'Rango Probable (P10-P90)',
-      hovertemplate: 'Rango Probable (P10-P90): %{y:,.0f}€<extra></extra>'
+      hovertemplate: 'Rango (P10-P90): %{y:,.0f}€<extra></extra>'
     },
     // Median
     {
@@ -84,12 +91,22 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
       line: { color: isDark ? '#60a5fa' : '#0068C9', width: 3 },
       name: `Mediana (${isReal ? 'Real' : 'Nominal'})`,
       hovertemplate: 'Mediana: %{y:,.0f}€<extra></extra>'
+    },
+    // Invested Capital (Benchmark)
+    {
+      x: years,
+      y: fanChartData.map(d => d[`Invested${isReal ? '_Real' : ''}` as keyof typeof d]),
+      type: 'scatter',
+      mode: 'lines',
+      line: { color: isDark ? '#94a3b8' : '#64748b', width: 2, dash: 'dot' },
+      name: 'Capital Invertido',
+      hovertemplate: 'Invertido: %{y:,.0f}€<extra></extra>'
     }
   ];
 
   // 2. Portfolio Composition (Stacked Bar)
   const compData = simulationData.portfolio_composition || [];
-  const compYears = compData.map(d => d.Year);
+  const compYears = compData.map(d => d.Year + startYear);
   
   const compositionTraces: any[] = [
     {
@@ -97,7 +114,7 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
       y: compData.map(d => d["Capital Inicial"]),
       type: 'bar',
       name: 'Capital Inicial',
-      marker: { color: isDark ? '#334155' : '#f8fafc', line: { color: isDark ? '#475569' : '#e2e8f0', width: 1 } }
+      marker: { color: '#f97316' } // Orange
     },
     {
       x: compYears,
@@ -116,7 +133,7 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
   ];
 
   // Add Black Swan annotations if any
-  const blackSwanYears = compData.filter(d => d.Is_Black_Swan).map(d => d.Year);
+  const blackSwanYears = compData.filter(d => d.Is_Black_Swan).map(d => d.Year + startYear);
   const blackSwanShapes = blackSwanYears.map(year => ({
     type: 'line',
     x0: year,
@@ -173,7 +190,7 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
   // 4. Psychology Chart (Annual Returns)
   const psychologyTraces: any[] = [
     {
-      x: simulationData.median_scenario.map(d => d.Año),
+      x: simulationData.median_scenario.map(d => d.Año + startYear),
       y: simulationData.median_scenario.map(d => d["Retorno (%)"]),
       type: 'bar',
       marker: {
@@ -183,8 +200,15 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
     }
   ];
 
+  // Last Year Widget Data
+  const lastPoint = fanChartData[fanChartData.length - 1];
+  const lastYear = years[years.length - 1];
+  const lastMedian = lastPoint[`Median${suffix}` as keyof typeof lastPoint] as number;
+  const lastP10 = lastPoint[`P10${suffix}` as keyof typeof lastPoint] as number;
+  const lastP90 = lastPoint[`P90${suffix}` as keyof typeof lastPoint] as number;
+
   return (
-    <div className="bg-card p-6 rounded-xl shadow-lg border border-border h-full flex flex-col transition-colors">
+    <div className="bg-card p-6 rounded-xl shadow-lg border border-border h-full flex flex-col transition-colors relative">
       {/* Tabs */}
       <div className="flex gap-4 border-b border-border mb-6 overflow-x-auto">
         {[
@@ -209,7 +233,26 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
       </div>
 
       {/* Chart Area */}
-      <div className="flex-1 min-h-[400px]">
+      <div className="flex-1 min-h-[400px] relative">
+        {/* Last Year Widget */}
+        {activeTab === 'future' && (
+          <div className="absolute top-0 right-0 md:right-10 bg-background/80 backdrop-blur-md p-3 rounded-lg border border-border shadow-sm z-10 text-xs md:text-sm pointer-events-none">
+             <h4 className="font-semibold mb-1 text-foreground">Año {lastYear} (Final)</h4>
+             <div className="space-y-0.5">
+                <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Mediana:</span>
+                    <span className="font-medium text-blue-500">{formatCurrency(lastMedian)}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Rango (P10-P90):</span>
+                    <span className="font-medium text-foreground">
+                        {formatCurrency(lastP10)} - {formatCurrency(lastP90)}
+                    </span>
+                </div>
+             </div>
+          </div>
+        )}
+
         {activeTab === 'future' && (
           <PlotlyChart
             data={fanChartTraces}

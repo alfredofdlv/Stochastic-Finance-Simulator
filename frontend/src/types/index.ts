@@ -31,6 +31,8 @@ export interface TickerSearchResponse {
 
 export interface FanChartPoint {
   Year: number;
+  Invested: number;
+  Invested_Real: number;
   P10_Nominal: number;
   Median_Nominal: number;
   P90_Nominal: number;

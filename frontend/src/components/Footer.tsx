@@ -41,8 +41,8 @@ export default function Footer() {
         <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
           <p>© 2025 WealthStress-Test. Todos los derechos reservados.</p>
           <div className="flex gap-6">
-            <a href="mailto:contacto@wealthstresstest.com" className="hover:text-foreground transition-colors">Contacto</a>
-            <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">Código (GitHub)</a>
+            <a href="mailto:alfredoflorezdelavega@gmail.com" className="hover:text-foreground transition-colors">Contacto</a>
+            <a href="https://github.com/alfredofdlv/Stochastic-Finance-Simulator" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">Código (GitHub)</a>
           </div>
         </div>
         
