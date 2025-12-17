@@ -130,6 +130,18 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
     }
   }));
 
+  const blackSwanAnnotations = blackSwanYears.map(year => ({
+    x: year,
+    y: 1,
+    xref: 'x',
+    yref: 'paper',
+    text: '⚠️',
+    showarrow: false,
+    font: { size: 16 },
+    hovertext: 'Evento de Cisne Negro: Caída significativa del mercado',
+    yshift: 10
+  }));
+
   // 3. Backtest Chart (Past)
   let backtestTraces: any[] = [];
   if (backtestData) {
@@ -163,7 +175,7 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
       y: simulationData.median_scenario.map(d => d["Retorno (%)"]),
       type: 'bar',
       marker: {
-        color: simulationData.median_scenario.map(d => d["Retorno (%)"] >= 0 ? (isDark ? '#60a5fa' : '#0068C9') : (isDark ? '#f87171' : '#DC3545'))
+        color: simulationData.median_scenario.map(d => d["Retorno (%)"] >= 0 ? '#10b981' : '#ef4444')
       },
       name: 'Retorno Anual %'
     }
@@ -212,7 +224,8 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
               ...commonLayout, 
               title: 'Composición del Patrimonio', 
               barmode: 'stack',
-              shapes: blackSwanShapes as any
+              shapes: blackSwanShapes as any,
+              annotations: blackSwanAnnotations as any
             }}
             useResizeHandler
             style={{ width: '100%', height: '100%' }}

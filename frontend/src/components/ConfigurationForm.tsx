@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Trash2, Play } from 'lucide-react';
+import { Plus, Trash2, Play, ChevronDown, Settings, Wallet, TrendingUp } from 'lucide-react';
 import AssetSearch from './AssetSearch';
 import { ContributionTranche } from '@/types';
 
@@ -20,6 +20,23 @@ interface ConfigurationFormProps {
   initialConfig?: SimulationConfig;
   variant?: 'sidebar' | 'centered';
 }
+
+const Section = ({ title, icon: Icon, children, defaultOpen = false }: any) => (
+  <details className="group border border-border rounded-xl bg-card overflow-hidden transition-all" open={defaultOpen}>
+    <summary className="flex items-center justify-between p-4 font-medium cursor-pointer list-none text-foreground hover:bg-accent/50 transition-colors select-none">
+      <div className="flex items-center gap-2">
+        {Icon && <Icon size={18} className="text-muted-foreground" />}
+        <span>{title}</span>
+      </div>
+      <ChevronDown size={16} className="text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
+    </summary>
+    <div className="p-4 pt-0 animate-in slide-in-from-top-2 duration-200">
+      <div className="space-y-4 pt-2">
+        {children}
+      </div>
+    </div>
+  </details>
+);
 
 export default function ConfigurationForm({ 
   onRunSimulation, 
@@ -57,139 +74,139 @@ export default function ConfigurationForm({
   };
 
   const isCentered = variant === 'centered';
-  const labelClass = "block text-sm font-semibold text-slate-800 mb-1.5";
-  const inputClass = "w-full border-slate-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-base p-2.5 border text-slate-900";
+  const labelClass = "block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide";
+  const inputClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all";
 
   return (
-    <div className={`flex flex-col gap-6 ${isCentered ? 'max-w-4xl mx-auto w-full' : ''}`}>
-      <div className={isCentered ? 'grid grid-cols-1 md:grid-cols-2 gap-8' : ''}>
-        <div className="space-y-5">
-          <h2 className={`font-bold text-slate-900 mb-4 ${isCentered ? 'text-2xl' : 'text-lg'}`}>
-            Configuración Inicial
-          </h2>
-          
-          {/* Capital Inicial */}
-          <div>
-            <label className={labelClass}>Capital Inicial (€)</label>
-            <input
-              type="number"
-              value={config.initialCapital}
-              onChange={(e) => setConfig({ ...config, initialCapital: Number(e.target.value) })}
-              className={inputClass}
-            />
-          </div>
-
-          {/* Asset Search */}
-          <div>
-            <label className={labelClass}>Activo / Ticker</label>
-            <AssetSearch onSelect={(ticker) => setConfig({ ...config, ticker })} />
-            <p className="text-sm text-slate-600 mt-1.5">
-              Seleccionado: <span className="font-bold text-blue-700">{config.ticker}</span>
-            </p>
-          </div>
-
-          {/* Inflation & Goal */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Inflación (%)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={config.inflation}
-                onChange={(e) => setConfig({ ...config, inflation: Number(e.target.value) })}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Meta (€)</label>
-              <input
-                type="number"
-                value={config.financialGoal}
-                onChange={(e) => setConfig({ ...config, financialGoal: Number(e.target.value) })}
-                className={inputClass}
-              />
-            </div>
-          </div>
-          
-          {/* Backtest Start Year */}
-           <div>
-              <label className={labelClass}>Año Inicio Backtest</label>
-              <input
-                type="number"
-                value={config.startYear}
-                onChange={(e) => setConfig({ ...config, startYear: Number(e.target.value) })}
-                className={inputClass}
-              />
-            </div>
+    <div className={`flex flex-col gap-4 ${isCentered ? 'max-w-2xl mx-auto w-full' : ''}`}>
+      
+      {/* 1. Configuración Inicial */}
+      <Section title="Configuración Inicial" icon={Settings} defaultOpen={true}>
+        <div>
+          <label className={labelClass}>Capital Inicial (€)</label>
+          <input
+            type="number"
+            value={config.initialCapital}
+            onChange={(e) => setConfig({ ...config, initialCapital: Number(e.target.value) })}
+            className={inputClass}
+            placeholder="Ej: 10000"
+          />
         </div>
 
-        {/* Contributions Table */}
-        <div className="flex flex-col h-full">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className={`font-bold text-slate-900 ${isCentered ? 'text-xl' : 'text-base'}`}>
-              Plan de Aportaciones
-            </h3>
-            <button 
-              onClick={addTranche} 
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 px-3 py-1.5 bg-blue-50 rounded-md transition-colors"
-            >
-              <Plus size={16} /> Añadir Tramo
-            </button>
+        <div>
+          <label className={labelClass}>Activo / Ticker</label>
+          <AssetSearch onSelect={(ticker) => setConfig({ ...config, ticker })} />
+          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Seleccionado:</span>
+            <span className="font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{config.ticker}</span>
           </div>
-          
-          <div className="space-y-3 flex-1">
-            {config.contributions.map((tranche, idx) => (
-              <div key={idx} className="flex gap-3 items-center bg-slate-50 p-3 rounded-lg border border-slate-200 shadow-sm">
-                <div className="flex-1">
-                  <label className="text-xs font-medium text-slate-500 block mb-1">Duración (Años)</label>
+        </div>
+      </Section>
+
+      {/* 2. Aportaciones */}
+      <Section title="Plan de Aportaciones" icon={Wallet} defaultOpen={true}>
+        <div className="space-y-3">
+          {config.contributions.map((tranche, index) => (
+            <div key={index} className="bg-accent/30 p-3 rounded-lg border border-border relative group">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Años</label>
                   <input
                     type="number"
                     value={tranche.years}
-                    onChange={(e) => updateContribution(idx, 'years', Number(e.target.value))}
-                    className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm text-slate-900 font-medium"
+                    onChange={(e) => updateContribution(index, 'years', Number(e.target.value))}
+                    className={inputClass}
                   />
                 </div>
-                <div className="flex-1">
-                  <label className="text-xs font-medium text-slate-500 block mb-1">Aportación (€/Mes)</label>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Mensual (€)</label>
                   <input
                     type="number"
                     value={tranche.monthly_amount}
-                    onChange={(e) => updateContribution(idx, 'monthly_amount', Number(e.target.value))}
-                    className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm text-slate-900 font-medium"
+                    onChange={(e) => updateContribution(index, 'monthly_amount', Number(e.target.value))}
+                    className={inputClass}
                   />
                 </div>
-                <button 
-                  onClick={() => removeTranche(idx)}
-                  className="text-slate-400 hover:text-red-500 mt-5 p-1 hover:bg-red-50 rounded transition-colors"
-                  disabled={config.contributions.length === 1}
+              </div>
+              
+              {config.contributions.length > 1 && (
+                <button
+                  onClick={() => removeTranche(index)}
+                  className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
                   title="Eliminar tramo"
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={12} />
                 </button>
-              </div>
-            ))}
-          </div>
-
-          <div className={`mt-8 ${isCentered ? 'flex justify-end' : ''}`}>
-            <button
-              onClick={() => onRunSimulation(config)}
-              disabled={isLoading}
-              className={`
-                bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-blue-200
-                ${isCentered ? 'px-8 py-4 text-lg rounded-xl w-full md:w-auto' : 'w-full py-3 rounded-lg'}
-              `}
-            >
-              {isLoading ? (
-                <>Procesando...</>
-              ) : (
-                <>
-                  <Play size={isCentered ? 24 : 18} /> Ejecutar Simulación
-                </>
               )}
-            </button>
+            </div>
+          ))}
+          
+          <button
+            onClick={addTranche}
+            className="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-primary hover:bg-accent rounded-md border border-dashed border-border transition-colors"
+          >
+            <Plus size={16} />
+            Añadir Tramo
+          </button>
+        </div>
+      </Section>
+
+      {/* 3. Avanzado */}
+      <Section title="Parámetros Avanzados" icon={TrendingUp}>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>Inflación (%)</label>
+            <input
+              type="number"
+              step="0.1"
+              value={config.inflation}
+              onChange={(e) => setConfig({ ...config, inflation: Number(e.target.value) })}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Meta (€)</label>
+            <input
+              type="number"
+              value={config.financialGoal}
+              onChange={(e) => setConfig({ ...config, financialGoal: Number(e.target.value) })}
+              className={inputClass}
+            />
           </div>
         </div>
-      </div>
+
+        <div>
+          <label className={labelClass}>Año Inicio Backtest</label>
+          <input
+            type="number"
+            value={config.startYear || ''}
+            onChange={(e) => setConfig({ ...config, startYear: Number(e.target.value) })}
+            className={inputClass}
+            placeholder="Ej: 2000"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Opcional. Si se deja vacío, no se ejecuta backtest.
+          </p>
+        </div>
+      </Section>
+
+      <button
+        onClick={() => onRunSimulation(config)}
+        disabled={isLoading}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-blue-900/20 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
+      >
+        {isLoading ? (
+          <>
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            <span>Simulando...</span>
+          </>
+        ) : (
+          <>
+            <Play size={20} fill="currentColor" />
+            <span>Ejecutar Simulación</span>
+          </>
+        )}
+      </button>
     </div>
   );
 }

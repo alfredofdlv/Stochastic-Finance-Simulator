@@ -86,7 +86,7 @@ export default function KPIs({ kpis, riskMetrics, isReal, inflationRate, years }
         <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
           <CountUp end={riskMetrics.success_probability} suffix="%" decimals={1} duration={1} />
         </h3>
-        <p className="text-xs text-slate-400 mt-1">Objetivo > 500k (Real)</p>
+        <p className="text-xs text-slate-400 mt-1">Objetivo &gt; 500k (Real)</p>
       </div>
     </div>
   );
