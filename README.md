@@ -63,3 +63,7 @@ Si deseas ejecutar este proyecto localmente, sigue estos pasos:
    ```
    streamlit run app.py
    ```
+
+## ⚖️ Descargo de Responsabilidad (Disclaimer)
+
+Esta herramienta tiene fines exclusivamente educativos y de simulación. Los rendimientos pasados no garantizan resultados futuros. Las proyecciones no deben tomarse como asesoramiento financiero profesional.
