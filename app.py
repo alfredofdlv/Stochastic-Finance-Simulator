@@ -42,6 +42,7 @@ st.sidebar.subheader("📊 Estrategia de Inversión")
 # Selector de Estrategia
 STRATEGIES = {
     "Personalizado": None,
+    "Cartera Personalizada Mixta (World + EM)": "MIXED",
     "Vanguard Global (VWRL.AS)": "VWRL.AS",
     "S&P 500 (SPY)": "SPY",
     "MSCI World (URTH)": "URTH"
@@ -55,18 +56,49 @@ if "mean_return_val" not in st.session_state:
 if "volatility_val" not in st.session_state:
     st.session_state.volatility_val = 15.0
 
-# Lógica para actualizar datos si se selecciona una estrategia real
+# Lógica para actualizar datos según estrategia
 ticker = STRATEGIES[selected_strategy]
-if ticker:
+
+if ticker == "MIXED":
+    st.sidebar.markdown("#### ⚖️ Pesos de la Cartera")
+    weight_world = st.sidebar.slider("% MSCI World (Developed)", 0, 100, 88, help="Peso en Mercados Desarrollados (IWDA.AS)")
+    weight_em = 100 - weight_world
+    st.sidebar.progress(weight_world / 100)
+    st.sidebar.caption(f"Emerging Markets (EEM): {weight_em}%")
+    
+    from finance_sim import calculate_weighted_stats
+    
+    if st.sidebar.button("🔄 Calcular Stats de Cartera"):
+        with st.spinner("Analizando correlación y volatilidad conjunta..."):
+            # Usamos IWDA.AS (World) y EEM (Emerging)
+            stats = calculate_weighted_stats("IWDA.AS", "EEM", weight_world / 100.0)
+            
+            if stats:
+                st.session_state.mean_return_val = float(stats["mean_return"] * 100)
+                st.session_state.volatility_val = float(stats["volatility"] * 100)
+                
+                st.sidebar.success(f"✅ Cartera Actualizada")
+                st.sidebar.info(f"""
+                **Correlación:** {stats['correlation']:.2f}
+                **Retorno Esperado:** {stats['mean_return']*100:.2f}%
+                **Volatilidad:** {stats['volatility']*100:.2f}%
+                """)
+            else:
+                st.sidebar.error("Error obteniendo datos de cartera.")
+
+elif ticker:
     from finance_sim import get_historical_stats
-    with st.spinner(f"Obteniendo datos históricos de {ticker}..."):
-        stats = get_historical_stats(ticker)
-        if stats:
-            st.session_state.mean_return_val = float(stats["mean_return"] * 100)
-            st.session_state.volatility_val = float(stats["volatility"] * 100)
-            st.sidebar.success(f"Datos cargados: Retorno {stats['mean_return']*100:.1f}% | Vol {stats['volatility']*100:.1f}%")
-        else:
-            st.sidebar.error("No se pudieron obtener datos. Usando valores anteriores.")
+    # Solo recargamos si el usuario lo pide o si cambia la selección (podríamos optimizar esto)
+    # Para simplificar, añadimos un botón de carga para no saturar la API en cada recarga de script
+    if st.sidebar.button("🔄 Cargar Datos Históricos"):
+        with st.spinner(f"Obteniendo datos históricos de {ticker}..."):
+            stats = get_historical_stats(ticker)
+            if stats:
+                st.session_state.mean_return_val = float(stats["mean_return"] * 100)
+                st.session_state.volatility_val = float(stats["volatility"] * 100)
+                st.sidebar.success(f"Datos cargados: Retorno {stats['mean_return']*100:.1f}% | Vol {stats['volatility']*100:.1f}%")
+            else:
+                st.sidebar.error("No se pudieron obtener datos. Usando valores anteriores.")
 
 # Inputs numéricos vinculados al session_state
 mean_return_input = st.sidebar.number_input(

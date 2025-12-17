@@ -49,6 +49,65 @@ def get_historical_stats(ticker, period="20y"):
         print(f"Error obteniendo datos para {ticker}: {e}")
         return None
 
+def calculate_weighted_stats(ticker1, ticker2, weight1, period="5y"):
+    """
+    Calcula estadísticas ponderadas para una cartera de dos activos,
+    considerando la correlación real entre ellos.
+    
+    Args:
+        ticker1 (str): Primer activo (ej. 'IWDA.AS').
+        ticker2 (str): Segundo activo (ej. 'EEM').
+        weight1 (float): Peso del primer activo (0.0 a 1.0).
+        period (str): Periodo histórico para correlación.
+        
+    Returns:
+        dict: Stats de la cartera combinada.
+    """
+    weight2 = 1.0 - weight1
+    try:
+        # Descargar datos conjuntos para asegurar alineación de fechas
+        data = yf.download([ticker1, ticker2], period=period, progress=False)['Close']
+        
+        if data.empty or len(data.columns) < 2:
+            return None
+            
+        # Calcular retornos diarios
+        returns = data.pct_change().dropna()
+        
+        # Medias y Covarianzas anualizadas
+        mean_returns = returns.mean() * 252
+        cov_matrix = returns.cov() * 252
+        
+        # Retorno esperado de la cartera
+        # Nota: yfinance devuelve columnas con los tickers, accedemos por nombre
+        r1 = mean_returns[ticker1]
+        r2 = mean_returns[ticker2]
+        portfolio_return = r1 * weight1 + r2 * weight2
+        
+        # Volatilidad de la cartera (Formula: w1^2*s1^2 + w2^2*s2^2 + 2*w1*w2*cov12)
+        var1 = cov_matrix.loc[ticker1, ticker1]
+        var2 = cov_matrix.loc[ticker2, ticker2]
+        cov12 = cov_matrix.loc[ticker1, ticker2]
+        
+        portfolio_variance = (weight1**2 * var1) + (weight2**2 * var2) + (2 * weight1 * weight2 * cov12)
+        portfolio_volatility = np.sqrt(portfolio_variance)
+        
+        # Correlación (para mostrar al usuario)
+        correlation = returns.corr().loc[ticker1, ticker2]
+        
+        return {
+            "mean_return": portfolio_return,
+            "volatility": portfolio_volatility,
+            "correlation": correlation,
+            "details": {
+                ticker1: {"return": r1, "vol": np.sqrt(var1)},
+                ticker2: {"return": r2, "vol": np.sqrt(var2)}
+            }
+        }
+    except Exception as e:
+        print(f"Error en cartera mixta: {e}")
+        return None
+
 def run_monte_carlo_simulation(
     initial_capital,
     contribution_schedule,
