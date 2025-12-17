@@ -1,5 +1,53 @@
 import numpy as np
 import pandas as pd
+import yfinance as yf
+
+def get_historical_stats(ticker, period="20y"):
+    """
+    Obtiene estadísticas históricas (retorno medio y volatilidad anualizada)
+    para un ticker dado usando yfinance.
+    
+    Args:
+        ticker (str): Símbolo del activo (ej. 'SPY', 'VWRL.AS').
+        period (str): Periodo de historia a descargar.
+        
+    Returns:
+        dict: {'mean_return': float, 'volatility': float, 'last_price': float}
+              o None si hay error.
+    """
+    try:
+        # Descargar datos históricos
+        stock = yf.Ticker(ticker)
+        hist = stock.history(period=period)
+        
+        if hist.empty:
+            return None
+            
+        # Calcular retornos diarios
+        # Usamos 'Close' para evitar ajustes de dividendos dobles si yfinance ya ajusta, 
+        # pero 'Adj Close' es más seguro para retorno total. 
+        # yfinance .history() devuelve columnas ajustadas por defecto en versiones recientes?
+        # Revisamos columnas: Open, High, Low, Close, Volume, Dividends, Stock Splits.
+        # 'Close' suele estar ajustado por splits. Para dividendos, mejor calcular Total Return si es posible,
+        # pero para simplificar usaremos el cambio porcentual del precio de cierre.
+        
+        daily_returns = hist['Close'].pct_change().dropna()
+        
+        # Anualizar métricas (asumiendo 252 días de trading)
+        mean_daily_return = daily_returns.mean()
+        std_daily_return = daily_returns.std()
+        
+        annualized_return = mean_daily_return * 252
+        annualized_volatility = std_daily_return * np.sqrt(252)
+        
+        return {
+            "mean_return": annualized_return,
+            "volatility": annualized_volatility,
+            "data_points": len(daily_returns)
+        }
+    except Exception as e:
+        print(f"Error obteniendo datos para {ticker}: {e}")
+        return None
 
 def run_monte_carlo_simulation(
     initial_capital,
