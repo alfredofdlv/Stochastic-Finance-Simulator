@@ -57,7 +57,8 @@ def run_monte_carlo_simulation(
     black_swan_enabled=True,
     black_swan_prob=0.02,
     inflation_rate=0.02,
-    num_simulations=1000
+    num_simulations=1000,
+    t_df=3
 ):
     """
     Ejecuta una simulación de Monte Carlo avanzada.
@@ -68,6 +69,7 @@ def run_monte_carlo_simulation(
         volatility: Volatilidad anual (decimal).
         black_swan_enabled: Si se activan los eventos extremos.
         inflation_rate: Tasa de inflación anual (decimal).
+        t_df: Grados de libertad para la distribución t-Student.
         
     Retorna:
         - summary_df: DataFrame con percentiles (Nominal y Real).
@@ -98,8 +100,15 @@ def run_monte_carlo_simulation(
     # Matriz de retornos para análisis
     returns_matrix = np.zeros((num_simulations, total_years + 1))
     
-    # Factor de normalización para t-student (df=3, var=3, std=sqrt(3))
-    t_std_dev = np.sqrt(3)
+    # Matriz para rastrear Black Swans
+    black_swan_matrix = np.zeros((num_simulations, total_years + 1), dtype=bool)
+    
+    # Factor de normalización para t-student (df=t_df, var=df/(df-2) para df>2)
+    # Para estandarizar t-student a varianza 1, dividimos por sqrt(df/(df-2))
+    if t_df > 2:
+        t_std_dev = np.sqrt(t_df / (t_df - 2))
+    else:
+        t_std_dev = 1.0 # Fallback para df bajos donde varianza es infinita o indefinida
     
     for sim in range(num_simulations):
         balance = initial_capital
@@ -113,8 +122,9 @@ def run_monte_carlo_simulation(
             if black_swan_enabled and np.random.random() < black_swan_prob:
                 is_black_swan = True
                 r_t = np.random.uniform(-0.50, -0.20)
+                black_swan_matrix[sim, year_num] = True
             else:
-                t_random = np.random.standard_t(3) / t_std_dev
+                t_random = np.random.standard_t(t_df) / t_std_dev
                 r_t = mean_return + volatility * t_random
             
             returns_matrix[sim, year_num] = r_t
@@ -149,10 +159,17 @@ def run_monte_carlo_simulation(
         
     invested_capital_total = [initial_capital + c for c in cumulative_contributions]
     
+    # Calcular Capital Invertido REAL (Deflactado) - Representa el poder adquisitivo del efectivo si se hubiera guardado bajo el colchón
+    invested_capital_real = []
+    for i, val in enumerate(invested_capital_total):
+        deflator = (1 + inflation_rate) ** i
+        invested_capital_real.append(val / deflator)
+    
     # DataFrame Resumen (Contiene datos Nominales y Reales)
     summary_df = pd.DataFrame({
         "Year": range(total_years + 1),
         "Invested": invested_capital_total,
+        "Invested_Real": invested_capital_real,
         "P10_Nominal": p10_nom, "Median_Nominal": p50_nom, "P90_Nominal": p90_nom,
         "P10_Real": p10_real, "Median_Real": p50_real, "P90_Real": p90_real
     })
@@ -192,6 +209,7 @@ def run_monte_carlo_simulation(
         curr_balance = results_nominal[median_sim_idx, i]
         r_t = returns_matrix[median_sim_idx, i]
         contrib = annual_contributions_list[i-1]
+        is_bs = black_swan_matrix[median_sim_idx, i]
         
         interest_generated = curr_balance - prev_balance - contrib
         
@@ -201,7 +219,8 @@ def run_monte_carlo_simulation(
             "Aportación Anual": contrib,
             "Retorno (%)": r_t * 100,
             "Interés Generado": interest_generated,
-            "Saldo Final": curr_balance
+            "Saldo Final": curr_balance,
+            "Is_Black_Swan": is_bs
         })
         
         stacked_initial.append(initial_capital)
@@ -215,6 +234,12 @@ def run_monte_carlo_simulation(
         "Aportaciones": stacked_contributed,
         "Interés Compuesto": stacked_interest
     })
+    
+    # Añadimos columna Is_Black_Swan al breakdown_df para facilitar el ploteo
+    # Ojo: breakdown_df tiene fila 0 (año 0), median_details empieza en año 1.
+    # Rellenamos con False el año 0.
+    bs_column = [False] + [d["Is_Black_Swan"] for d in median_details]
+    breakdown_df["Is_Black_Swan"] = bs_column
     
     simulation_stats = {
         "max_drawdown": max_drawdown

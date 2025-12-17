@@ -87,7 +87,9 @@ st.session_state.mean_return_val = mean_return_input
 st.session_state.volatility_val = volatility_input
 
 black_swan_enabled = st.sidebar.toggle("Activar 'Black Swans' (Crisis)", value=True)
+inflation_rate_input = st.sidebar.number_input("Inflación Estimada (%)", value=2.0, step=0.5)
 tax_rate_input = st.sidebar.number_input("Tasa Impositiva (%)", min_value=0.0, max_value=100.0, value=19.0)
+financial_goal = st.sidebar.number_input("Meta Financiera (€)", value=500000.0, step=10000.0)
 
 # Footer Profesional
 st.sidebar.markdown("---")
@@ -104,6 +106,7 @@ VOLATILITY = volatility_input / 100.0
 BLACK_SWAN_PROB = 0.02
 INFLATION_RATE = inflation_rate_input / 100.0
 
+# Lógica de Ejecución y Persistencia
 if st.sidebar.button("🚀 Ejecutar Simulación", type="primary"):
     
     # Convertir DataFrame a lista de tuplas
@@ -118,7 +121,8 @@ if st.sidebar.button("🚀 Ejecutar Simulación", type="primary"):
 
     # --- Ejecutar Lógica ---
     with st.spinner('Simulando 1,000 escenarios de mercado...'):
-        summary_df, median_details, breakdown_df, sim_stats, final_balances_real = run_monte_carlo_simulation(
+        # Guardamos los resultados en session_state
+        st.session_state.sim_results = run_monte_carlo_simulation(
             initial_capital=initial_capital,
             contribution_schedule=contribution_schedule,
             mean_return=MEAN_RETURN,
@@ -128,6 +132,10 @@ if st.sidebar.button("🚀 Ejecutar Simulación", type="primary"):
             inflation_rate=INFLATION_RATE,
             num_simulations=1000
         )
+
+# Verificar si hay resultados en memoria para mostrar
+if "sim_results" in st.session_state:
+    summary_df, median_details, breakdown_df, sim_stats, final_balances_real = st.session_state.sim_results
     
     # Toggle Vista Real vs Nominal
     view_mode = st.radio("Modo de Visualización:", ["Nominal (Sin ajustar)", "Real (Poder Adquisitivo)"], horizontal=True)
@@ -156,24 +164,48 @@ if st.sidebar.button("🚀 Ejecutar Simulación", type="primary"):
     # --- Visualización de KPIs ---
     st.markdown("### 🎯 Resultados Clave (Escenario Mediano)")
     
-    # Estilo CSS para KPIs
+    # Estilo CSS para KPIs (Compatible con Dark/Light Mode)
     st.markdown("""
     <style>
     div[data-testid="stMetric"] {
-        background-color: #f0f2f6;
-        border: 1px solid #e0e0e0;
+        background-color: rgba(128, 128, 128, 0.1);
+        border: 1px solid rgba(128, 128, 128, 0.2);
         padding: 10px;
         border-radius: 5px;
     }
     </style>
     """, unsafe_allow_html=True)
     
+    # Seleccionar datos según modo
+    if is_real:
+        median_final_balance = summary_df["Median_Real"].iloc[-1]
+        invested_val = summary_df["Invested_Real"].iloc[-1]
+        p10_col, p50_col, p90_col = "P10_Real", "Median_Real", "P90_Real"
+        invested_col = "Invested_Real"
+    else:
+        median_final_balance = summary_df["Median_Nominal"].iloc[-1]
+        invested_val = summary_df["Invested"].iloc[-1]
+        p10_col, p50_col, p90_col = "P10_Nominal", "Median_Nominal", "P90_Nominal"
+        invested_col = "Invested"
+
+    # Calculamos KPIs pasando el capital invertido correcto (Real o Nominal)
+    # Pasamos initial_capital=0 y todo como 'contributed' para que la suma total sea correcta en la función
+    kpis = calculate_kpis(
+        0, 
+        invested_val, 
+        median_final_balance, 
+        tax_rate_input / 100.0
+    )
+    
+    # Probabilidad de Éxito (Meta) - Siempre calculada sobre valor REAL para ser honestos
+    success_prob = (final_balances_real >= financial_goal).mean() * 100
+    
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
     
     kpi1.metric(
-        label="Capital Total Invertido", 
+        label=f"Capital Invertido ({'Real' if is_real else 'Nominal'})", 
         value=f"€{kpis['Capital Total Invertido']:,.0f}",
-        help="Suma de tu capital inicial más todas las aportaciones mensuales."
+        help="Valor del capital aportado (ajustado por inflación en modo Real)."
     )
     
     kpi2.metric(
@@ -221,13 +253,11 @@ if st.sidebar.button("🚀 Ejecutar Simulación", type="primary"):
         mode='lines', line=dict(color='#0068C9', width=3), name='Escenario Mediano'
     ))
     
-    # Capital Invertido (Solo tiene sentido compararlo en nominal, o deflactarlo también. 
-    # Para simplificar, mostramos nominal si estamos en nominal, o lo ocultamos en real para no confundir)
-    if not is_real:
-        fig_fan.add_trace(go.Scatter(
-            x=summary_df["Year"], y=summary_df["Invested"],
-            mode='lines', line=dict(color='gray', dash='dash', width=2), name='Capital Invertido'
-        ))
+    # Capital Invertido (Real o Nominal según selección)
+    fig_fan.add_trace(go.Scatter(
+        x=summary_df["Year"], y=summary_df[invested_col],
+        mode='lines', line=dict(color='gray', dash='dash', width=2), name='Capital Invertido'
+    ))
     
     fig_fan.update_layout(
         xaxis_title="Año", yaxis_title=f"Saldo (€ {'Real' if is_real else 'Nominal'})",
