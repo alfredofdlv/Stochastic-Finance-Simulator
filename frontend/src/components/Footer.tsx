@@ -38,8 +38,16 @@ export default function Footer() {
           </div>
         </div>
         
-        <div className="mt-12 pt-8 border-t border-border text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Finance Simulator. Todos los derechos reservados.
+        <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+          <p>© 2025 WealthStress-Test. Todos los derechos reservados.</p>
+          <div className="flex gap-6">
+            <a href="mailto:contacto@wealthstresstest.com" className="hover:text-foreground transition-colors">Contacto</a>
+            <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">Código (GitHub)</a>
+          </div>
+        </div>
+        
+        <div className="mt-8 text-xs text-muted-foreground/60 text-center max-w-4xl mx-auto leading-relaxed">
+          <strong>Disclaimer Financiero:</strong> Esta herramienta es exclusivamente para fines educativos e informativos. No constituye asesoramiento financiero, fiscal o legal profesional. Los resultados de las simulaciones (Monte Carlo) son proyecciones probabilísticas basadas en datos históricos y modelos matemáticos, y no garantizan resultados futuros. Las inversiones conllevan riesgos, incluida la posible pérdida del capital invertido.
         </div>
       </div>
     </footer>

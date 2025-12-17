@@ -95,21 +95,21 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
       y: compData.map(d => d["Capital Inicial"]),
       type: 'bar',
       name: 'Capital Inicial',
-      marker: { color: isDark ? '#94a3b8' : '#cbd5e1' }
+      marker: { color: isDark ? '#334155' : '#f8fafc', line: { color: isDark ? '#475569' : '#e2e8f0', width: 1 } }
     },
     {
       x: compYears,
       y: compData.map(d => d["Aportaciones"]),
       type: 'bar',
       name: 'Aportaciones',
-      marker: { color: isDark ? '#60a5fa' : '#3b82f6' }
+      marker: { color: '#0068C9' }
     },
     {
       x: compYears,
       y: compData.map(d => d["Interés Compuesto"]),
       type: 'bar',
       name: 'Interés Compuesto',
-      marker: { color: isDark ? '#34d399' : '#10b981' }
+      marker: { color: '#10b981' }
     }
   ];
 
@@ -182,9 +182,9 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
   ];
 
   return (
-    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 h-full flex flex-col transition-colors">
+    <div className="bg-card p-6 rounded-xl shadow-lg border border-border h-full flex flex-col transition-colors">
       {/* Tabs */}
-      <div className="flex gap-4 border-b border-slate-100 dark:border-slate-700 mb-6 overflow-x-auto">
+      <div className="flex gap-4 border-b border-border mb-6 overflow-x-auto">
         {[
           { id: 'future', label: 'Proyección' },
           { id: 'composition', label: 'Composición' },
@@ -196,12 +196,12 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
             onClick={() => setActiveTab(tab.id as any)}
             className={`pb-3 px-1 text-sm font-medium transition-colors relative whitespace-nowrap ${
               activeTab === tab.id 
-                ? 'text-blue-600 dark:text-blue-400' 
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                ? 'text-primary' 
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {tab.label}
-            {activeTab === tab.id && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 dark:bg-blue-400" />}
+            {activeTab === tab.id && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />}
           </button>
         ))}
       </div>
@@ -211,7 +211,7 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
         {activeTab === 'future' && (
           <PlotlyChart
             data={fanChartTraces}
-            layout={{ ...commonLayout, title: `Proyección de Patrimonio (${isReal ? 'Real' : 'Nominal'})` }}
+            layout={{ ...commonLayout, title: { text: `Proyección de Patrimonio (${isReal ? 'Real' : 'Nominal'})` } }}
             useResizeHandler
             style={{ width: '100%', height: '100%' }}
           />
@@ -222,7 +222,7 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
             data={compositionTraces}
             layout={{ 
               ...commonLayout, 
-              title: 'Composición del Patrimonio', 
+              title: { text: 'Composición del Patrimonio' }, 
               barmode: 'stack',
               shapes: blackSwanShapes as any,
               annotations: blackSwanAnnotations as any
@@ -236,7 +236,7 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
           backtestData ? (
             <PlotlyChart
               data={backtestTraces}
-              layout={{ ...commonLayout, title: 'Backtest Histórico (Ajustado a Inflación)' }}
+              layout={{ ...commonLayout, title: { text: 'Backtest Histórico (Ajustado a Inflación)' } }}
               useResizeHandler
               style={{ width: '100%', height: '100%' }}
             />
@@ -250,7 +250,7 @@ export default function SimulationCharts({ simulationData, backtestData, isReal 
         {activeTab === 'psychology' && (
           <PlotlyChart
             data={psychologyTraces}
-            layout={{ ...commonLayout, title: 'Retornos Anuales (Volatilidad)' }}
+            layout={{ ...commonLayout, title: { text: 'Retornos Anuales (Volatilidad)' } }}
             useResizeHandler
             style={{ width: '100%', height: '100%' }}
           />

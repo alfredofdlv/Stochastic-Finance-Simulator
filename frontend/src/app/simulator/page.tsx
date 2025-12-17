@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Sidebar, { SimulationConfig } from '@/components/Sidebar';
+import ConfigurationForm from '@/components/ConfigurationForm';
 import SimulationCharts from '@/components/SimulationCharts';
 import KPIs from '@/components/KPIs';
 import { runSimulation, runBacktest } from '@/lib/api';
@@ -87,8 +88,30 @@ export default function SimulatorPage() {
 
   const totalYears = currentConfig ? currentConfig.contributions.reduce((acc, curr) => acc + curr.years, 0) : 0;
 
+  // Initial State: Centered Form
+  if (!hasRun && !isLoading) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background p-6 animate-in fade-in duration-500">
+        <div className="w-full max-w-2xl space-y-8">
+          <div className="text-center space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground">Simulador de Patrimonio</h1>
+            <p className="text-xl text-muted-foreground">Proyecta tu futuro financiero con Monte Carlo y análisis de riesgos.</p>
+          </div>
+          <div className="bg-card border border-border rounded-2xl p-8 shadow-2xl shadow-black/5">
+            <ConfigurationForm 
+              onRunSimulation={handleRunSimulation} 
+              isLoading={isLoading} 
+              initialConfig={currentConfig}
+              variant="centered"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden animate-in slide-in-from-right-4 duration-500">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
@@ -133,16 +156,6 @@ export default function SimulatorPage() {
 
             {isLoading ? (
               <SimulatorSkeleton />
-            ) : !hasRun ? (
-              <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
-                <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mb-4">
-                  <Menu className="w-10 h-10 text-muted-foreground" />
-                </div>
-                <h2 className="text-2xl font-bold text-foreground">Configura tu primera simulación</h2>
-                <p className="text-muted-foreground max-w-md">
-                  Usa el panel lateral para definir tu capital inicial, aportaciones y perfil de riesgo.
-                </p>
-              </div>
             ) : (
               <>
                 {/* KPIs Section */}

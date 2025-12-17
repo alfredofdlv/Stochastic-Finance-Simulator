@@ -37,6 +37,7 @@ class SimulationRequest(BaseModel):
     inflation_rate: float
     tax_rate: float
     financial_goal: float
+    black_swan_enabled: bool = True
 
 class BacktestRequest(BaseModel):
     initial_capital: float
@@ -91,7 +92,8 @@ def simulate(request: SimulationRequest):
         contribution_schedule=schedule,
         mean_return=mean_return,
         volatility=volatility,
-        inflation_rate=request.inflation_rate
+        inflation_rate=request.inflation_rate,
+        black_swan_enabled=request.black_swan_enabled
     )
     
     # 4. Process Results

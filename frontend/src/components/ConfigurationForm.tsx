@@ -12,6 +12,7 @@ export interface SimulationConfig {
   contributions: ContributionTranche[];
   financialGoal: number;
   startYear?: number;
+  blackSwanEnabled: boolean;
 }
 
 interface ConfigurationFormProps {
@@ -20,6 +21,13 @@ interface ConfigurationFormProps {
   initialConfig?: SimulationConfig;
   variant?: 'sidebar' | 'centered';
 }
+
+const QUICK_ASSETS = [
+  { label: 'S&P 500', ticker: 'SPY' },
+  { label: 'MSCI World', ticker: 'URTH' },
+  { label: 'Nasdaq 100', ticker: 'QQQ' },
+  { label: 'Vanguard Global', ticker: 'VWRL.AS' },
+];
 
 const Section = ({ title, icon: Icon, children, defaultOpen = false }: any) => (
   <details className="group border border-border rounded-xl bg-card overflow-hidden transition-all" open={defaultOpen}>
@@ -50,7 +58,8 @@ export default function ConfigurationForm({
     ticker: 'VWRL.AS',
     contributions: [{ years: 20, monthly_amount: 500 }],
     financialGoal: 500000,
-    startYear: 2008
+    startYear: undefined,
+    blackSwanEnabled: true
   });
 
   const updateContribution = (index: number, field: keyof ContributionTranche, value: number) => {
@@ -96,10 +105,69 @@ export default function ConfigurationForm({
         <div>
           <label className={labelClass}>Activo / Ticker</label>
           <AssetSearch onSelect={(ticker) => setConfig({ ...config, ticker })} />
+          
+          {/* Quick Select */}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {QUICK_ASSETS.map((asset) => (
+              <button
+                key={asset.ticker}
+                onClick={() => setConfig({ ...config, ticker: asset.ticker })}
+                className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
+                  config.ticker === asset.ticker
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background text-muted-foreground border-border hover:border-primary hover:text-primary'
+                }`}
+              >
+                {asset.label}
+              </button>
+            ))}
+          </div>
+
           <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
             <span>Seleccionado:</span>
             <span className="font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{config.ticker}</span>
           </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>Inflación (%)</label>
+            <input
+              type="number"
+              step="0.1"
+              value={config.inflation}
+              onChange={(e) => setConfig({ ...config, inflation: Number(e.target.value) })}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Meta (€)</label>
+            <input
+              type="number"
+              value={config.financialGoal}
+              onChange={(e) => setConfig({ ...config, financialGoal: Number(e.target.value) })}
+              className={inputClass}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between p-3 bg-accent/30 rounded-lg border border-border">
+          <div className="space-y-0.5">
+            <label className="text-sm font-medium text-foreground">Cisnes Negros</label>
+            <p className="text-xs text-muted-foreground">Simular eventos extremos</p>
+          </div>
+          <button
+            onClick={() => setConfig({ ...config, blackSwanEnabled: !config.blackSwanEnabled })}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+              config.blackSwanEnabled ? 'bg-primary' : 'bg-input'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                config.blackSwanEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
         </div>
       </Section>
 
@@ -153,28 +221,6 @@ export default function ConfigurationForm({
 
       {/* 3. Avanzado */}
       <Section title="Parámetros Avanzados" icon={TrendingUp}>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={labelClass}>Inflación (%)</label>
-            <input
-              type="number"
-              step="0.1"
-              value={config.inflation}
-              onChange={(e) => setConfig({ ...config, inflation: Number(e.target.value) })}
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>Meta (€)</label>
-            <input
-              type="number"
-              value={config.financialGoal}
-              onChange={(e) => setConfig({ ...config, financialGoal: Number(e.target.value) })}
-              className={inputClass}
-            />
-          </div>
-        </div>
-
         <div>
           <label className={labelClass}>Año Inicio Backtest</label>
           <input
@@ -186,6 +232,12 @@ export default function ConfigurationForm({
           />
           <p className="text-xs text-muted-foreground mt-1">
             Opcional. Si se deja vacío, no se ejecuta backtest.
+          </p>
+        </div>
+        
+        <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+          <p className="text-xs text-yellow-600 dark:text-yellow-400">
+            <strong>Nota Técnica:</strong> La simulación utiliza una distribución T-Student con 3 grados de libertad para modelar colas pesadas (fat tails).
           </p>
         </div>
       </Section>

@@ -28,65 +28,65 @@ export default function KPIs({ kpis, riskMetrics, isReal, inflationRate, years }
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       {/* Capital Invertido */}
-      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300">
+      <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center text-muted-foreground">
             <Wallet size={20} />
           </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Capital Invertido</p>
+          <p className="text-sm font-medium text-muted-foreground">Capital Invertido</p>
         </div>
-        <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+        <h3 className="text-4xl font-bold text-foreground tracking-tight">
           <CountUp end={invested} prefix="€" separator="," decimals={0} duration={1} />
         </h3>
-        <p className="text-xs text-slate-400 mt-1">{isReal ? 'Poder Adquisitivo' : 'Valor Nominal'}</p>
+        <p className="text-xs text-muted-foreground mt-2">{isReal ? 'Poder Adquisitivo' : 'Valor Nominal'}</p>
       </div>
 
       {/* Saldo Final Neto */}
-      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">
+      <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">
             <PiggyBank size={20} />
           </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Saldo Final (Neto)</p>
+          <p className="text-sm font-medium text-muted-foreground">Saldo Final (Neto)</p>
         </div>
-        <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+        <h3 className="text-4xl font-bold text-foreground tracking-tight">
           <CountUp end={finalNet} prefix="€" separator="," decimals={0} duration={1} />
         </h3>
-        <div className="flex items-center gap-1 mt-1 text-xs text-red-500">
+        <div className="flex items-center gap-1 mt-2 text-xs text-destructive">
           <Landmark size={12} />
           <span>Impuestos: -€{Math.round(taxes).toLocaleString()}</span>
         </div>
       </div>
 
       {/* Renta Mensual (4%) */}
-      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400">
+      <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400">
             <TrendingUp size={20} />
           </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Renta Mensual (4%)</p>
+          <p className="text-sm font-medium text-muted-foreground">Renta Mensual (4%)</p>
         </div>
-        <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+        <h3 className="text-4xl font-bold text-foreground tracking-tight">
           <CountUp end={monthlyRent} prefix="€" separator="," decimals={0} duration={1} />
         </h3>
-        <p className="text-xs text-slate-400 mt-1">Libertad Financiera</p>
+        <p className="text-xs text-muted-foreground mt-2">Libertad Financiera</p>
       </div>
 
       {/* Probabilidad Meta */}
-      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
-        <div className="flex items-center gap-3 mb-2">
+      <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
+        <div className="flex items-center gap-3 mb-3">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-            riskMetrics.success_probability >= 80 ? 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 
-            riskMetrics.success_probability >= 50 ? 'bg-yellow-50 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+            riskMetrics.success_probability >= 80 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 
+            riskMetrics.success_probability >= 50 ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400' : 'bg-destructive/10 text-destructive'
           }`}>
             <Target size={20} />
           </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Probabilidad Meta</p>
+          <p className="text-sm font-medium text-muted-foreground">Probabilidad Meta</p>
         </div>
-        <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+        <h3 className="text-4xl font-bold text-foreground tracking-tight">
           <CountUp end={riskMetrics.success_probability} suffix="%" decimals={1} duration={1} />
         </h3>
-        <p className="text-xs text-slate-400 mt-1">Objetivo &gt; 500k (Real)</p>
+        <p className="text-xs text-muted-foreground mt-2">Objetivo &gt; 500k (Real)</p>
       </div>
     </div>
   );
