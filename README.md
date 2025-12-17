@@ -1,72 +1,57 @@
-# 📈 Simulador de Estrés Financiero: Monte Carlo & Black Swans
+# 📈 WealthStress-Test: Simulador Financiero Estocástico
 
-Este proyecto es una herramienta avanzada de planificación financiera diseñada para inversores que buscan entender la realidad estadística de los mercados. A diferencia de las calculadoras de interés compuesto tradicionales que utilizan una progresión lineal o una distribución normal simplista, este simulador utiliza **Simulaciones de Monte Carlo** con distribuciones de **"Colas Pesadas" (Fat Tails)** para modelar el riesgo real de una cartera indexada.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)
+![Next.js](https://img.shields.io/badge/Next.js-15+-black.svg)
+![Tailwind](https://img.shields.io/badge/Tailwind-v4-38bdf8.svg)
 
+**WealthStress-Test** es una plataforma profesional de simulación financiera diseñada para inversores que buscan entender el riesgo real de sus carteras. A diferencia de las calculadoras lineales tradicionales, este sistema modela la incertidumbre del mercado utilizando matemáticas avanzadas.
 
-https://stochastic-finance-simulator-fhpi6yv3ru7sqxabbuijwc.streamlit.app
+## ✨ Características Principales
 
-## 🚀 Características Principales
+*   **Simulación de Monte Carlo Avanzada:** Genera miles de trayectorias posibles basadas en estadísticas históricas reales de cualquier ticker de Yahoo Finance.
+*   **Modelado de "Fat Tails" (Colas Pesadas):** Utiliza la distribución **T-Student** (en lugar de la Normal) para capturar la probabilidad real de eventos extremos.
+*   **Análisis de Cisnes Negros:** Inyecta eventos de estrés de mercado configurables para evaluar la resiliencia del patrimonio.
+*   **Backtesting Histórico:** Compara proyecciones con datos reales del pasado para validar estrategias.
+*   **Análisis de Riesgo Profundo:** Página dedicada con métricas de Max Drawdown, Probabilidad de Éxito y visualizaciones de "Montaña Rusa Emocional".
+*   **Modo Experto:** Control total sobre los grados de libertad de la distribución y parámetros de volatilidad.
 
-* **Simulación Probabilística de Monte Carlo** : Ejecuta 1,000 escenarios posibles basados en la volatilidad histórica real de activos como el S&P 500, MSCI World o carteras mixtas.
-* **Modelado T-Student** : Utiliza una distribución T-Student para capturar eventos extremos (crisis y booms) con mayor precisión que una campana de Gauss tradicional.
-* **Eventos de "Cisne Negro" (Black Swans)** : Probabilidad estocástica de caídas sistémicas severas (entre -20% y -50%) para poner a prueba la resiliencia de la cartera.
-* **Datos Reales (Yahoo Finance)** : Obtención automática de retornos y volatilidad histórica mediante la API de `yfinance`.
-* **Ajuste de Inflación y Poder Adquisitivo** : Permite visualizar los resultados en valor nominal o en valor real (deflactado), proporcionando una visión honesta del futuro financiero.
-* **Gestión de Aportaciones Dinámicas** : Interfaz editable para definir tramos de inversión a lo largo de décadas.
-* **Análisis de Riesgo (Max Drawdown)** : Calcula la mayor caída histórica esperada en el escenario mediano para medir la tolerancia al riesgo del usuario.
+## 🧮 Fundamentos Matemáticos
 
-## 🛠️ Stack Tecnológico
+1.  **Movimiento Browniano Geométrico (Modificado):** La evolución del precio se modela como una Ecuación Diferencial Estocástica (SDE).
+2.  **Distribución T-Student:** Permite ajustar la "gordura" de las colas. Un valor de `df=3` modela mercados con alta frecuencia de crisis.
+3.  **Ajuste por Inflación:** Todos los cálculos pueden visualizarse en términos de **Poder Adquisitivo Real**, descontando la inflación proyectada.
 
-* **Lenguaje:** Python 3.9+
-* **Framework Web:** Streamlit
-* **Cálculo Numérico:** NumPy & Pandas
-* **Visualización:** Plotly (Fan Charts, Barras Apiladas, Gauge Charts)
-* **API Financiera:** yfinance (Yahoo Finance)
+## 🏗️ Arquitectura
+
+*   **Backend:** FastAPI (Python) + NumPy + Pandas + YFinance.
+*   **Frontend:** Next.js 15 + Tailwind CSS v4 + Lucide Icons + Plotly.js.
+*   **Estado:** React Context API para gestión de datos de simulación.
+
+## 🚀 Instalación Rápida
+
+### Backend
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn api:app --reload
+```
+
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## 🐳 Docker (Opcional para Backend)
+Si prefieres usar Docker para el backend:
+```bash
+cd backend
+docker build -t finance-backend .
+docker run -p 8000:8000 finance-backend
+```
 
 ---
-
-## 🔬 Fundamentos Matemáticos
-
-El simulador calcula el retorno anualizado **$r_t$** siguiendo una distribución T-Student estandarizada:
-
-$$
-r_t = \mu + \sigma \cdot \frac{T(df)}{\sqrt{df/(df-2)}}
-$$
-
-Donde:
-
-* **$\mu$**: Retorno medio histórico.
-* **$\sigma$**: Volatilidad (desviación estándar).
-* **$df$**: Grados de libertad (ajustable en el Modo Experto para aumentar el riesgo de cola).
-
-Además, implementa la **Regla del 4%** para calcular la renta mensual segura que el patrimonio final podría generar sin agotarse.
-
----
-
-## 💻 Instalación Local
-
-Si deseas ejecutar este proyecto localmente, sigue estos pasos:
-
-1. **Clonar el repositorio:**
-   **Bash**
-
-   ```
-   git clone https://github.com/tu-usuario/simulador-financiero.git
-   cd simulador-financiero
-   ```
-2. **Instalar dependencias:**
-   **Bash**
-
-   ```
-   pip install -r requirements.txt
-   ```
-3. **Ejecutar la aplicación:**
-   **Bash**
-
-   ```
-   streamlit run app.py
-   ```
-
-## ⚖️ Descargo de Responsabilidad (Disclaimer)
-
-Esta herramienta tiene fines exclusivamente educativos y de simulación. Los rendimientos pasados no garantizan resultados futuros. Las proyecciones no deben tomarse como asesoramiento financiero profesional.
+*Desarrollado por [Alfredo Florez](https://github.com/alfredofdlv) para inversores que no creen en las líneas rectas.*
