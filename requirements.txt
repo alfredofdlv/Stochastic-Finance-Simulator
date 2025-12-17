@@ -3,4 +3,8 @@ pandas
 numpy
 plotly
 yfinance
+fastapi
+uvicorn
+pydantic
+
 

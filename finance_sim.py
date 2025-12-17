@@ -268,17 +268,17 @@ def run_monte_carlo_simulation(
         curr_balance = results_nominal[median_sim_idx, i]
         r_t = returns_matrix[median_sim_idx, i]
         contrib = annual_contributions_list[i-1]
-        is_bs = black_swan_matrix[median_sim_idx, i]
+        is_bs = bool(black_swan_matrix[median_sim_idx, i])
         
         interest_generated = curr_balance - prev_balance - contrib
         
         median_details.append({
-            "Año": year_num,
-            "Saldo Inicial": prev_balance,
-            "Aportación Anual": contrib,
-            "Retorno (%)": r_t * 100,
-            "Interés Generado": interest_generated,
-            "Saldo Final": curr_balance,
+            "Año": int(year_num),
+            "Saldo Inicial": float(prev_balance),
+            "Aportación Anual": float(contrib),
+            "Retorno (%)": float(r_t * 100),
+            "Interés Generado": float(interest_generated),
+            "Saldo Final": float(curr_balance),
             "Is_Black_Swan": is_bs
         })
         
@@ -327,3 +327,90 @@ def calculate_kpis(initial_capital, total_contributed, final_balance, tax_rate):
         "Saldo Final Neto": final_net_balance,
         "Rentabilidad (%)": profit_percentage
     }
+
+def run_backtest(
+    initial_capital,
+    contribution_schedule,
+    ticker,
+    start_year,
+    inflation_rate=0.02
+):
+    """
+    Ejecuta un backtest histórico real.
+    
+    Args:
+        initial_capital: Capital inicial.
+        contribution_schedule: Lista de tuplas (años, mensualidad).
+        ticker: Símbolo del activo.
+        start_year: Año de inicio (int).
+        inflation_rate: Tasa de inflación para ajuste real.
+        
+    Returns:
+        dict: Resultados del backtest.
+    """
+    # 1. Expandir calendario de aportaciones (mensual para mayor precisión en backtest)
+    monthly_contributions = []
+    for duration, monthly_amount in contribution_schedule:
+        years_in_tranche = int(duration)
+        monthly_contributions.extend([monthly_amount] * (years_in_tranche * 12))
+        
+    total_months = len(monthly_contributions)
+    
+    # 2. Obtener datos históricos
+    try:
+        stock = yf.Ticker(ticker)
+        hist = stock.history(start=f"{start_year}-01-01")
+        
+        if hist.empty:
+            return None
+            
+        data = hist['Close']
+        
+        # Resamplear a mensual (usando el último precio de cada mes)
+        monthly_data = data.resample('M').last()
+        monthly_returns = monthly_data.pct_change().dropna()
+        
+        # Alinear longitud
+        limit = min(total_months, len(monthly_returns))
+        
+        dates = monthly_returns.index[:limit]
+        returns = monthly_returns.values[:limit]
+        contributions = monthly_contributions[:limit]
+        
+        balance = initial_capital
+        history = []
+        
+        cumulative_invested = initial_capital
+        
+        for i in range(limit):
+            date = dates[i]
+            r_m = returns[i]
+            contrib = contributions[i]
+            
+            # Aplicar retorno y aportación
+            balance = balance * (1 + r_m) + contrib
+            cumulative_invested += contrib
+            
+            # Ajuste Real (aproximado mensual)
+            years_elapsed = (date.year - start_year) + (date.month - 1) / 12.0
+            deflator = (1 + inflation_rate) ** years_elapsed
+            balance_real = balance / deflator
+            
+            history.append({
+                "Date": date.strftime("%Y-%m-%d"),
+                "Balance_Nominal": balance,
+                "Balance_Real": balance_real,
+                "Invested": cumulative_invested,
+                "Return_Pct": r_m * 100
+            })
+            
+        return {
+            "history": history,
+            "final_balance": balance,
+            "final_balance_real": history[-1]["Balance_Real"] if history else initial_capital,
+            "total_invested": cumulative_invested
+        }
+    except Exception as e:
+        print(f"Error en backtest: {e}")
+        return None
+
